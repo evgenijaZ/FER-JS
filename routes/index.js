@@ -1,8 +1,10 @@
 const express = require('express');
 const resNetPredictor = require('../src/predictor')
+const faceDetector = require('../src/face_detector')
 const router = express.Router();
 
 router.get('/', (req, res) => {
+    faceDetector.detect("./src/data/images/img.png")
     const IMG1 = './src/data/images/S010_006_00000013.png'
     const IMG2 = './src/data/images/S010_006_00000014.png'
     const IMG3 = './src/data/images/S010_006_00000015.png'
