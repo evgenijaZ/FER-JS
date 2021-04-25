@@ -23,7 +23,7 @@
                 <canvas id="canvasOutput" width=320 height=240></canvas>
             </td>
             <td style="text-align: left">
-                <p id="emotion"/>
+                <p id="emotionOutput"/>
             </td>
         </tr>
     </table>
@@ -53,7 +53,7 @@
         startAndStop.innerText = 'Stop';
         videoInput.width = videoInput.videoWidth;
         videoInput.height = videoInput.videoHeight;
-        utils.processVideo('videoInput', 'canvasOutput', 'haarcascade_frontalface_default.xml');
+        utils.processVideo('videoInput', 'canvasOutput', 'haarcascade_frontalface_default.xml', "emotionOutput");
     }
 
     function onVideoStopped() {

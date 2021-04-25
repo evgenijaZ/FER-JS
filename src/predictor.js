@@ -28,29 +28,39 @@ module.exports = class LSTMPredictor {
                 y,
                 idx
             ) {
-                p.push(0.2126*this.bitmap.data[idx + 0]+0.7152*this.bitmap.data[idx + 1]+ 0.0722*this.bitmap.data[idx + 2]);
+                p.push(0.2126 * this.bitmap.data[idx + 0] + 0.7152 * this.bitmap.data[idx + 1] + 0.0722 * this.bitmap.data[idx + 2]);
             });
             return p;
         });
     };
 
     classify = async imgURIs => {
-        let values =[]
+        let values = []
         for (const file of imgURIs) {
             const contents = await this.loadImg(file);
-            values.push(contents.map(x => x/255))
+            values.push(contents)
         }
-        let shape = [3, 48, 48, 1];
-        let reshaped = math.reshape(values, shape);
+        return await this.classifyFromArrays(values)
+    };
+
+    classifyFromArrays = async arrays => {
+        let normalized = []
+        arrays.forEach((arr) => {
+                normalized.push(arr.map(x => x / 255))
+            }
+        )
+        let shape = [normalized.length, 48, 48, 1];
+        let reshaped = math.reshape(normalized, shape);
         const img = tf.tensor4d(reshaped, shape);
         let expanded = img.expandDims(0);
         const predictions = await this.model.predict(expanded);
-        const prediction = predictions
+        const predictionValues = predictions
             .reshape([5])
-            .argMax()
-            .dataSync()[0];
-        return this.labels[prediction];
-    };
+            .dataSync();
+        let result1 = []
+        for (let key in this.labels) {
+            result1.push([labels[key], predictionValues[key]])
+        }
+        return result1;
+    }
 }
-
-
