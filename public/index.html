@@ -6,7 +6,7 @@
     <link href="css/home_page_style.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
-<h2>Face Detection</h2>
+<h2>Emotion recognition</h2>
 <div>
     <div class="control">
         <button id="startAndStop" disabled>Start</button>
@@ -22,13 +22,16 @@
             <td>
                 <canvas id="canvasOutput" width=320 height=240></canvas>
             </td>
+            <td style="text-align: left">
+                <p id="emotion"/>
+            </td>
         </tr>
     </table>
 </div>
 <script src="https://webrtc.github.io/adapter/adapter-5.0.4.js" type="text/javascript"></script>
-<script src="js/utils.js" type="text/javascript"></script>
+<script src="js/videoProcessor.js" type="text/javascript"></script>
 <script type="text/javascript">
-    let utils = new Utils('errorMessage');
+    let utils = new VideoProcessor('errorMessage');
     let streaming = false;
     let videoInput = document.getElementById('videoInput');
     let startAndStop = document.getElementById('startAndStop');
