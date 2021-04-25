@@ -64,10 +64,10 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
         img.src = url;
     };
 
-    this.processVideo = (input, output, classifier_model) => {
+    this.processVideo = (input, output, classifierModel, emotionResultId) => {
         try {
             this.clearError();
-            this.run(input, output, classifier_model);
+            this.run(input, output, classifierModel, emotionResultId);
         } catch (err) {
             this.printError(err);
         }
@@ -165,7 +165,7 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
         }
     };
 
-    this.run = (inputId, outputId, classifier_model) => {
+    this.run = (inputId, outputId, classifierModel, emotionResultId) => {
         let video = document.getElementById(inputId);
         let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         let dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
@@ -173,11 +173,12 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
         let cap = new cv.VideoCapture(video);
         let faces = new cv.RectVector();
         let classifier = new cv.CascadeClassifier();
+        let frameQueue = [];
 
         // load pre-trained classifiers
-        classifier.load(classifier_model);
+        classifier.load(classifierModel);
 
-        const FPS = 30;
+        const FPS = 3;
 
         const processVideo = () => {
             try {
@@ -188,6 +189,8 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                     gray.delete();
                     faces.delete();
                     classifier.delete();
+                    document.getElementById(emotionResultId).textContent = ""
+                    frameQueue = [];
                     return;
                 }
                 let begin = Date.now();
@@ -200,16 +203,20 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                 // draw faces.
                 for (let i = 0; i < faces.size(); ++i) {
                     let face = faces.get(i);
-                    // let point1 = new cv.Point(face.x, face.y);
-                    // let point2 = new cv.Point(face.x + face.width, face.y + face.height);
                     let rect = new cv.Rect(face.x, face.y, face.width, face.height);
                     let cropped = dst.roi(rect);
                     let dsize = new cv.Size(48, 48);
                     cv.resize(cropped, cropped, dsize, 0, 0, cv.INTER_AREA);
+                    cv.cvtColor(cropped, cropped, cv.COLOR_RGBA2GRAY, 0);
+                    frameQueue.push(Array.from(cropped.data))
+                    if (frameQueue.length > 3) {
+                        frameQueue.shift();
+                        // classify emotion
+                        this.requestEmotion(frameQueue)
+                            .then(result => document.getElementById(emotionResultId).textContent = result.result);
+                    }
                     cv.imshow(outputId, cropped);
-                    // cv.rectangle(dst, point1, point2, [255, 0, 0, 255]);
                 }
-                // cv.imshow(outputId, dst);
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
                 setTimeout(processVideo, delay);
@@ -221,4 +228,23 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
         // schedule the first one.
         setTimeout(processVideo, 0);
     };
+
+    this.requestEmotion = async (arrays) => {
+        try {
+            const response = await fetch('/', {
+                method: 'POST',
+                port: 3000,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    images: arrays
+                })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error:', error);
+            return {}
+        }
+    }
 }
