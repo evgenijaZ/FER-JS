@@ -178,7 +178,7 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
         // load pre-trained classifiers
         classifier.load(classifierModel);
 
-        const FPS = 1;
+        const FPS = 3;
 
         const processVideo = () => {
             try {
@@ -189,7 +189,7 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                     gray.delete();
                     faces.delete();
                     classifier.delete();
-                    document.getElementById(emotionResultId).textContent = ""
+                    document.getElementById(emotionResultId).innerHTML = ''
                     frameQueue = [];
                     return;
                 }
@@ -211,21 +211,36 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                     frameQueue.push(gray)
                     if (frameQueue.length > 3) {
                         frameQueue.shift();
-                        // classify emotion
-                        this.requestEmotion(frameQueue.map(x => Array.from(x.data)))
-                            .then(result => document.getElementById(emotionResultId).innerHTML = result.result);
-                    }
-                    //output frames
-                    if (frameQueue.length === 3) {
-                        let mergedArray;
-                        mergedArray = new Uint8Array(48 * 48 * 3);
-                        let offset = 0
-                        for (let i = 0; i < frameQueue.length; i++) {
-                            mergedArray.set(frameQueue[i].data, offset);
-                            offset+=frameQueue[i].data.length;
+
+                        let classifyAndShow = async (frameQueue) => {
+
+                            //output frames
+                            let mergedArray;
+                            mergedArray = new Uint8Array(48 * 48 * 3);
+                            let offset = 0
+                            for (let i = 0; i < frameQueue.length; i++) {
+                                mergedArray.set(frameQueue[i].data, offset);
+                                offset += frameQueue[i].data.length;
+                            }
+                            let imagesMatrix = cv.matFromArray(48 * 3, 48, cv.CV_8UC1, mergedArray);
+
+                            // classify emotion
+                            let emotionsResponse = await this.requestEmotion(frameQueue.map(x => Array.from(x.data)));
+
+                            return {matrix: imagesMatrix, emotions: emotionsResponse}
                         }
-                        let mat = cv.matFromArray(48 * 3, 48, cv.CV_8UC1, mergedArray);
-                        cv.imshow(outputId, mat);
+
+                        classifyAndShow(frameQueue).then(result => {
+                                cv.imshow(outputId, result.matrix);
+                                const container = document.getElementById(emotionResultId);
+                                container.innerHTML = '';
+                                result.emotions.result.forEach(item => {
+                                    let paragraph = document.createElement("p");
+                                    paragraph.innerHTML = item.emotion + " : " + item.value;
+                                    container.appendChild(paragraph);
+                                })
+                            }
+                        )
                     }
                 }
                 // schedule the next one.

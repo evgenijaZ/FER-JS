@@ -23,7 +23,7 @@
                 <canvas id="canvasOutput" width=48 height=144></canvas>
             </td>
             <td style="text-align: left">
-                <p id="emotionOutput"/>
+                <div id="emotionOutput"/>
             </td>
         </tr>
     </table>
@@ -37,6 +37,7 @@
     let startAndStop = document.getElementById('startAndStop');
     let canvasOutput = document.getElementById('canvasOutput');
     let canvasContext = canvasOutput.getContext('2d');
+    let emotionsOutput = document.getElementById('emotionOutput');
 
     startAndStop.addEventListener('click', () => {
         if (!streaming) {
@@ -53,7 +54,7 @@
         startAndStop.innerText = 'Stop';
         videoInput.width = videoInput.videoWidth;
         videoInput.height = videoInput.videoHeight;
-        utils.processVideo('videoInput', 'canvasOutput', 'haarcascade_frontalface_default.xml', "emotionOutput");
+        utils.processVideo('videoInput', 'canvasOutput', 'haarcascade_frontalface_default.xml', 'emotionOutput');
     }
 
     function onVideoStopped() {
