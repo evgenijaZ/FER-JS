@@ -178,7 +178,7 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
         // load pre-trained classifiers
         classifier.load(classifierModel);
 
-        const FPS = 3;
+        const FPS = 1;
 
         const processVideo = () => {
             try {
@@ -207,15 +207,26 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                     let cropped = dst.roi(rect);
                     let dsize = new cv.Size(48, 48);
                     cv.resize(cropped, cropped, dsize, 0, 0, cv.INTER_AREA);
-                    cv.cvtColor(cropped, cropped, cv.COLOR_RGBA2GRAY, 0);
-                    frameQueue.push(Array.from(cropped.data))
+                    cv.cvtColor(cropped, gray, cv.COLOR_RGBA2GRAY, 0);
+                    frameQueue.push(gray)
                     if (frameQueue.length > 3) {
                         frameQueue.shift();
                         // classify emotion
-                        this.requestEmotion(frameQueue)
-                            .then(result => document.getElementById(emotionResultId).textContent = result.result);
+                        this.requestEmotion(frameQueue.map(x => Array.from(x.data)))
+                            .then(result => document.getElementById(emotionResultId).innerHTML = result.result);
                     }
-                    cv.imshow(outputId, cropped);
+                    //output frames
+                    if (frameQueue.length === 3) {
+                        let mergedArray;
+                        mergedArray = new Uint8Array(48 * 48 * 3);
+                        let offset = 0
+                        for (let i = 0; i < frameQueue.length; i++) {
+                            mergedArray.set(frameQueue[i].data, offset);
+                            offset+=frameQueue[i].data.length;
+                        }
+                        let mat = cv.matFromArray(48 * 3, 48, cv.CV_8UC1, mergedArray);
+                        cv.imshow(outputId, mat);
+                    }
                 }
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
