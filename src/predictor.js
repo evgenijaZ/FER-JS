@@ -6,7 +6,7 @@ module.exports = class LSTMPredictor {
     constructor() {
         this.model;
         this.labels = labels;
-        this.modelPath = `file://${__dirname}/data/model/lstm_tf_v3/model.json`;
+        this.modelPath = `file://${__dirname}/data/model/20210425-013926_180_lstm_model_tf/model.json`;
     }
 
     initialize = async () => {
@@ -59,7 +59,7 @@ module.exports = class LSTMPredictor {
             .dataSync();
         let result1 = []
         for (let key in this.labels) {
-            result1.push([labels[key], predictionValues[key]])
+            result1.push({emotion:labels[key], value:predictionValues[key]})
         }
         return result1;
     }

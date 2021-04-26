@@ -1,27 +1,28 @@
 const express = require('express');
-const resNetPredictor = require('../src/predictor')
-const faceDetector = require('../src/face_detector')
+const lstmPredictor = require('../src/predictor')
 const path = require("path");
 const router = express.Router();
 const bodyParser = require('body-parser');
 const parser = bodyParser.json();
 
-
 router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
-router.post('/', parser, function (req, res) {
-    try {
-        const run = async () => {
-            const predictor = await resNetPredictor.create();
-            return await predictor.classifyFromArrays(req.body.images);
-        }
-        run().then(prediction => res.json({result: prediction}));
-    } catch (e) {
-        console.log(e)
-        res.status(500).send()
+lstmPredictor.create().then(predictor => {
+        router.post('/', parser, function (req, res) {
+            try {
+                const run = async () => {
+                    // const predictor = await lstmPredictor.create();
+                    return await predictor.classifyFromArrays(req.body.images);
+                }
+                run().then(prediction => res.json({result: prediction}));
+            } catch (e) {
+                console.log(e)
+                res.status(500).send()
+            }
+        });
     }
-});
+);
 
 module.exports = router;
