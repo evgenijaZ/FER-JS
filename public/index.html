@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Face Detection</title>
+    <title>Emotion recognition</title>
     <link href="css/home_page_style.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
-<h2>Emotion recognition</h2>
+<h2>Emotion recognition method based on bidirectional LSTM network</h2>
 <div>
     <div class="control">
         <button id="startAndStop" disabled>Start</button>
@@ -54,7 +54,7 @@
         startAndStop.innerText = 'Stop';
         videoInput.width = videoInput.videoWidth;
         videoInput.height = videoInput.videoHeight;
-        utils.processVideo('videoInput', 'canvasOutput', 'haarcascade_frontalface_default.xml', 'emotionOutput');
+        utils.processVideo('videoInput', 'canvasOutput', 'lbpcascade_frontalface_improved.xml', 'emotionOutput');
     }
 
     function onVideoStopped() {
@@ -64,7 +64,7 @@
     }
 
     utils.loadOpenCv(() => {
-        let faceCascadeFile = 'haarcascade_frontalface_default.xml';
+        let faceCascadeFile = 'lbpcascade_frontalface_improved.xml';
         utils.createFileFromUrl(faceCascadeFile, faceCascadeFile, () => {
             startAndStop.removeAttribute('disabled');
         });

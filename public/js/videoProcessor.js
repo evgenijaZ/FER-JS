@@ -44,30 +44,18 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                     cv.FS_createDataFile('/', path, data, true, false, false);
                     callback();
                 } else {
-                    self.printError('Failed to load ' + url + ' status: ' + request.status);
+                    self.printError('Failed to load ' + url + ' status : ' + request.status);
                 }
             }
         };
         request.send();
     };
 
-    this.loadImageToCanvas = (url, cavansId) => {
-        let canvas = document.getElementById(cavansId);
-        let ctx = canvas.getContext('2d');
-        let img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0, img.width, img.height);
-        };
-        img.src = url;
-    };
 
     this.processVideo = (input, output, classifierModel, emotionResultId) => {
         try {
             this.clearError();
-            this.run(input, output, classifierModel, emotionResultId);
+            this.classifyEmotion(input, output, classifierModel, emotionResultId);
         } catch (err) {
             this.printError(err);
         }
@@ -97,26 +85,6 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
             err = err.stack.replace(/\n/g, '<br>');
         }
         this.errorOutput.innerHTML = err;
-    };
-
-    this.loadCode = (scriptId, textAreaId) => {
-        let scriptNode = document.getElementById(scriptId);
-        let textArea = document.getElementById(textAreaId);
-        if (scriptNode.type !== 'text/javascript') {
-            throw Error('Unknown code snippet type');
-        }
-        textArea.value = scriptNode.text.replace(/^\n/, '');
-    };
-
-    this.addFileInputHandler = (fileInputId, canvasId) => {
-        let inputElement = document.getElementById(fileInputId);
-        inputElement.addEventListener('change', (e) => {
-            let files = e.target.files;
-            if (files.length > 0) {
-                let imgUrl = URL.createObjectURL(files[0]);
-                self.loadImageToCanvas(imgUrl, canvasId);
-            }
-        }, false);
     };
 
     const onVideoCanPlay = () => {
@@ -165,7 +133,7 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
         }
     };
 
-    this.run = (inputId, outputId, classifierModel, emotionResultId) => {
+    this.classifyEmotion = (inputId, outputId, classifierModel, emotionResultId) => {
         let video = document.getElementById(inputId);
         let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         let dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
@@ -203,17 +171,12 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                 // draw faces.
                 for (let i = 0; i < faces.size(); ++i) {
                     let face = faces.get(i);
-                    let rect = new cv.Rect(face.x, face.y, face.width, face.height);
-                    let cropped = dst.roi(rect);
-                    let dsize = new cv.Size(48, 48);
-                    cv.resize(cropped, cropped, dsize, 0, 0, cv.INTER_AREA);
-                    cv.cvtColor(cropped, gray, cv.COLOR_RGBA2GRAY, 0);
-                    frameQueue.push(gray)
+                    let cropped = gray.roi(new cv.Rect(face.x, face.y, face.width, face.height));
+                    cv.resize(cropped, cropped, (new cv.Size(48, 48)), 0, 0, cv.INTER_AREA);
+                    frameQueue.push(cropped)
                     if (frameQueue.length > 3) {
                         frameQueue.shift();
-
                         let classifyAndShow = async (frameQueue) => {
-
                             //output frames
                             let mergedArray;
                             mergedArray = new Uint8Array(48 * 48 * 3);
@@ -226,7 +189,6 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
 
                             // classify emotion
                             let emotionsResponse = await this.requestEmotion(frameQueue.map(x => Array.from(x.data)));
-
                             return {matrix: imagesMatrix, emotions: emotionsResponse}
                         }
 
