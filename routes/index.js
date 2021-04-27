@@ -13,7 +13,6 @@ lstmPredictor.create().then(predictor => {
         router.post('/', parser, function (req, res) {
             try {
                 const run = async () => {
-                    // const predictor = await lstmPredictor.create();
                     return await predictor.classifyFromArrays(req.body.images);
                 }
                 run().then(prediction => res.json({result: prediction}));
