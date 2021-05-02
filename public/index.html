@@ -28,10 +28,14 @@
             </div>
         </div>
         <p class="err" id="errorMessage"></p>
+        <div>
+            <canvas id="emotionChart"></canvas>
+        </div>
     </main>
 </div>
 <script src="https://webrtc.github.io/adapter/adapter-5.0.4.js" type="text/javascript"></script>
 <script src="js/videoProcessor.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="text/javascript">
     let utils = new VideoProcessor('errorMessage');
     let streaming = false;
@@ -74,6 +78,50 @@
             startAndStop.removeAttribute('disabled');
         });
     });
+</script>
+<script type="text/javascript">
+    const data = {
+        labels: [],
+        datasets: [{
+            label: 'Happy',
+            backgroundColor: 'rgb(99,133,255)',
+            borderColor: 'rgb(99,133,255)',
+            data: [],
+        },
+        {
+            label: 'Anger',
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data: [],
+        }]
+    };
+    const config = {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Emotions chart'
+                }
+            }
+        },
+    };
+
+    const emotionChart = new Chart(
+        document.getElementById('emotionChart'),
+        config
+    );
+
+    let chartData = emotionChart.data;
+    chartData.labels.push('1');
+    chartData.datasets[0].data.push(.13);
+    chartData.datasets[1].data.push(.48);
+    emotionChart.update();
 </script>
 </body>
 </html>
