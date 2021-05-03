@@ -164,6 +164,7 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                 let begin = Date.now();
                 // start processing.
                 cap.read(src);
+                cv.normalize(src, src, -100, 305, cv.NORM_MINMAX)
                 src.copyTo(dst);
                 cv.cvtColor(dst, gray, cv.COLOR_RGBA2GRAY, 0);
                 // detect faces.
@@ -201,7 +202,7 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                                 chartData.labels.push('.');
                                 result.emotions.result.forEach(item => {
                                     let paragraph = document.createElement("p");
-                                    paragraph.innerHTML = item.emotion + " : " + item.value;
+                                    paragraph.innerHTML = item.emotion + " : " + item.value.toLocaleString('en-US', {maximumFractionDigits: 6, useGrouping:false});
                                     container.appendChild(paragraph);
 
                                     chartData.datasets
