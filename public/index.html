@@ -11,24 +11,23 @@
 
     <main role="main" class="container">
         <div class="starter-template" style="text-align: center">
-            <h1>Emotion recognition method</h1>
-            <p class="lead">Based on local binary patterns method<br>and bidirectional LSTM model.</p>
+            <h1>Метод розпізнавання емоцій</h1>
+            <p class="lead">Заснований на методя локальних двійкових шаблонів<br>та двонаправленій мережі з довгою короткочасною пам'яттю.</br></p>
         </div>
         <div class="d-flex justify-content-center">
             <div class="control">
-                <button class="btn btn-lg  btn-secondary" id="startAndStop" disabled>Start</button>
+                <button class="btn btn-lg  btn-secondary" id="startAndStop" disabled>Старт</button>
             </div>
         </div>
         <div class="d-flex flex-row p-2">
             <video class="m-2" id="videoInput"></video>
             <canvas class="m-2 align-self-center" id="canvasOutput" width=48 height=144></canvas>
             <div class="d-flex flex-column m-2 align-self-center">
-                <h4 id="emotionHeader" hidden="hidden">Emotion</h4>
                 <div style="text-align: left" id="emotionOutput"></div>
             </div>
         </div>
         <p class="err" id="errorMessage"></p>
-        <div style="height: 350px">
+        <div style="height: 300px">
             <canvas id="emotionChart"></canvas>
         </div>
     </main>
@@ -44,37 +43,36 @@
     let canvasOutput = document.getElementById('canvasOutput');
     let canvasContext = canvasOutput.getContext('2d');
     let emotionsOutput = document.getElementById('emotionOutput');
-    let emotionHeader = document.getElementById('emotionHeader');
 
     // Chart start
     const data = {
         labels: [],
         datasets: [
             {
-                label: 'Anger',
+                label: 'Злість',
                 backgroundColor: 'rgb(167,106,108)',
                 borderColor: 'rgb(167,106,108)',
                 data: [],
             },
             {
-                label: 'Surprise',
+                label: 'Подив',
                 backgroundColor: 'rgba(172,165,104)',
                 borderColor: 'rgba(172,165,104)',
                 data: [],
             },
             {
-                label: 'Happy',
+                label: 'Радість',
                 backgroundColor: 'rgba(95,156,107)',
                 borderColor: 'rgba(95,156,107)',
                 data: []
             },
             {
-                label: 'Sadness',
+                label: 'Смуток',
                 backgroundColor: 'rgba(95,127,177)',
                 borderColor: 'rgba(95,127,177)',
                 data: [],
             }, {
-                label: 'Fear',
+                label: 'Страх',
                 backgroundColor: 'rgb(100,85,130)',
                 borderColor: 'rgb(100,85,130)',
                 data: [],
@@ -95,7 +93,7 @@
                 },
                 title: {
                     display: true,
-                    text: 'Emotions chart',
+                    text: 'Графік емоційних виразів обличчя',
                     color: 'lightgray'
                 }
             }
@@ -120,21 +118,18 @@
 
     function onVideoStarted() {
         streaming = true;
-        startAndStop.innerText = 'Stop';
+        startAndStop.innerText = 'Стоп';
         videoInput.width = videoInput.videoWidth;
         videoInput.height = videoInput.videoHeight;
-        emotionHeader.hidden = false;
-
         utils.processVideo('videoInput', 'canvasOutput', 'lbpcascade_frontalface_improved.xml', 'emotionOutput', emotionChart);
     }
 
     function onVideoStopped() {
         streaming = false;
         canvasContext.clearRect(0, 0, canvasOutput.width, canvasOutput.height);
-        startAndStop.innerText = 'Start';
-        emotionHeader.hidden = true;
+        startAndStop.innerText = 'Старт';
         emotionChart.data.labels = []
-        emotionChart.data.datasets = []
+        emotionChart.data.datasets.forEach(dataset=>dataset.data=[])
         emotionChart.update()
     }
 
