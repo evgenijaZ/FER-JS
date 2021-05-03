@@ -52,10 +52,10 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
     };
 
 
-    this.processVideo = (input, output, classifierModel, emotionResultId) => {
+    this.processVideo = (input, output, classifierModel, emotionResultId, chart) => {
         try {
             this.clearError();
-            this.classifyEmotion(input, output, classifierModel, emotionResultId);
+            this.classifyEmotion(input, output, classifierModel, emotionResultId, chart);
         } catch (err) {
             this.printError(err);
         }
@@ -133,7 +133,7 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
         }
     };
 
-    this.classifyEmotion = (inputId, outputId, classifierModel, emotionResultId) => {
+    this.classifyEmotion = (inputId, outputId, classifierModel, emotionResultId, chart) => {
         let video = document.getElementById(inputId);
         let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         let dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
@@ -196,11 +196,19 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                                 cv.imshow(outputId, result.matrix);
                                 const container = document.getElementById(emotionResultId);
                                 container.innerHTML = '';
+
+                                let chartData = chart.data;
+                                chartData.labels.push('.');
                                 result.emotions.result.forEach(item => {
                                     let paragraph = document.createElement("p");
                                     paragraph.innerHTML = item.emotion + " : " + item.value;
                                     container.appendChild(paragraph);
+
+                                    chartData.datasets
+                                        .find(dataset => item.emotion.toLowerCase().includes(dataset.label.toLowerCase()))
+                                        .data.push(item.value)
                                 })
+                                chart.update();
                             }
                         )
                     }
