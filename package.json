@@ -11,10 +11,16 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@tensorflow/tfjs-node": "^3.4.0",
+    "body-parser": "^1.19.0",
+    "chart.js": "^3.2.1",
     "express": "^4.17.1",
+    "jimp": "^0.16.1",
+    "opencv": "github:peterbraden/node-opencv",
     "pug": "^3.0.2"
   },
   "devDependencies": {
+    "mathjs": "^9.3.2",
     "nodemon": "^2.0.7"
   }
 }

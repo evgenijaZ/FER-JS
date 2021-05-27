@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Emotion recognition</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body style="background-color:rgba(0, 0, 0, 0.7); color: lightgray">
+<div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+
+    <main role="main" class="container">
+        <div class="starter-template" style="text-align: center">
+            <h1>Метод розпізнавання емоцій</h1>
+            <p class="lead">Заснований на методі локальних двійкових шаблонів<br>та двонаправленій мережі з довгою короткочасною пам'яттю.</br></p>
+        </div>
+        <div class="d-flex justify-content-center">
+            <div class="control">
+                <button class="btn btn-lg  btn-secondary" id="startAndStop" disabled>Старт</button>
+            </div>
+        </div>
+        <div class="d-flex flex-row p-2">
+            <video class="m-2" id="videoInput"></video>
+            <canvas class="m-2 align-self-center" id="canvasOutput" width=48 height=144></canvas>
+            <div class="d-flex flex-column m-2 align-self-center">
+                <div style="text-align: left" id="emotionOutput"></div>
+            </div>
+        </div>
+        <p class="err" id="errorMessage"></p>
+        <div style="height: 300px">
+            <canvas id="emotionChart"></canvas>
+        </div>
+    </main>
+</div>
+<script src="https://webrtc.github.io/adapter/adapter-5.0.4.js" type="text/javascript"></script>
+<script src="js/videoProcessor.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="text/javascript">
+    let utils = new VideoProcessor('errorMessage');
+    let streaming = false;
+    let videoInput = document.getElementById('videoInput');
+    let startAndStop = document.getElementById('startAndStop');
+    let canvasOutput = document.getElementById('canvasOutput');
+    let canvasContext = canvasOutput.getContext('2d');
+    let emotionsOutput = document.getElementById('emotionOutput');
+
+    // Chart start
+    const data = {
+        labels: [],
+        datasets: [
+            {
+                label: 'Злість',
+                backgroundColor: 'rgb(167,106,108)',
+                borderColor: 'rgb(167,106,108)',
+                data: [],
+            },
+            {
+                label: 'Подив',
+                backgroundColor: 'rgba(172,165,104)',
+                borderColor: 'rgba(172,165,104)',
+                data: [],
+            },
+            {
+                label: 'Радість',
+                backgroundColor: 'rgba(95,156,107)',
+                borderColor: 'rgba(95,156,107)',
+                data: []
+            },
+            {
+                label: 'Смуток',
+                backgroundColor: 'rgba(95,127,177)',
+                borderColor: 'rgba(95,127,177)',
+                data: [],
+            }, {
+                label: 'Страх',
+                backgroundColor: 'rgb(100,85,130)',
+                borderColor: 'rgb(100,85,130)',
+                data: [],
+            },]
+    };
+    const config = {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: 'lightgray'
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Графік емоційних виразів обличчя',
+                    color: 'lightgray'
+                }
+            }
+        },
+    };
+
+    const emotionChart = new Chart(
+        document.getElementById('emotionChart'),
+        config
+    );
+    //Chart end
+
+    startAndStop.addEventListener('click', () => {
+        if (!streaming) {
+            utils.clearError();
+            utils.startCamera('qvga', onVideoStarted, 'videoInput');
+        } else {
+            utils.stopCamera();
+            onVideoStopped();
+        }
+    });
+
+    function onVideoStarted() {
+        streaming = true;
+        startAndStop.innerText = 'Стоп';
+        videoInput.width = videoInput.videoWidth;
+        videoInput.height = videoInput.videoHeight;
+        utils.processVideo('videoInput', 'canvasOutput', 'lbpcascade_frontalface_improved.xml', 'emotionOutput', emotionChart);
+    }
+
+    function onVideoStopped() {
+        streaming = false;
+        canvasContext.clearRect(0, 0, canvasOutput.width, canvasOutput.height);
+        startAndStop.innerText = 'Старт';
+        emotionChart.data.labels = []
+        emotionChart.data.datasets.forEach(dataset=>dataset.data=[])
+        emotionChart.update()
+    }
+
+    utils.loadOpenCv(() => {
+        let faceCascadeFile = 'lbpcascade_frontalface_improved.xml';
+        utils.createFileFromUrl(faceCascadeFile, faceCascadeFile, () => {
+            startAndStop.removeAttribute('disabled');
+        });
+    });
+</script>
+</body>
+</html>
