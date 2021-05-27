@@ -10,6 +10,15 @@ module.exports = class LSTMPredictor {
     }
 
     initialize = async () => {
+        class L2 {
+
+            static className = 'L2';
+
+            constructor(config) {
+                return tf.regularizers.l1l2(config)
+            }
+        }
+        tf.serialization.registerClass(L2);
         this.model = await tf.loadLayersModel(this.modelPath);
     };
 
