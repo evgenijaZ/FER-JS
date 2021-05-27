@@ -164,7 +164,6 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                 let begin = Date.now();
                 // start processing.
                 cap.read(src);
-                cv.normalize(src, src, -100, 305, cv.NORM_MINMAX)
                 src.copyTo(dst);
                 cv.cvtColor(dst, gray, cv.COLOR_RGBA2GRAY, 0);
                 // detect faces.
@@ -172,8 +171,15 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                 // draw faces.
                 for (let i = 0; i < faces.size(); ++i) {
                     let face = faces.get(i);
-                    let cropped = gray.roi(new cv.Rect(face.x, face.y, face.width, face.height));
+                    let cropped;
+                    let padding = 10;
+                    if (face.x - padding < 0 || face.y - padding < 0 || face.width + padding > gray.width || face.height + padding > gray.height) {
+                        cropped = gray.roi(new cv.Rect(face.x, face.y, face.width, face.height));
+                    } else {
+                        cropped = gray.roi(new cv.Rect(face.x - padding, face.y - padding, face.width + padding, face.height + padding));
+                    }
                     cv.resize(cropped, cropped, (new cv.Size(48, 48)), 0, 0, cv.INTER_AREA);
+                    // cv.normalize(cropped, cropped, 50, 350, cv.NORM_MINMAX)
                     frameQueue.push(cropped)
                     if (frameQueue.length > 3) {
                         frameQueue.shift();
@@ -202,7 +208,10 @@ function VideoProcessor(errorOutputId) { // eslint-disable-line no-unused-vars
                                 chartData.labels.push('.');
                                 result.emotions.result.forEach(item => {
                                     let paragraph = document.createElement("p");
-                                    paragraph.innerHTML = item.emotion + " : " + item.value.toLocaleString('en-US', {maximumFractionDigits: 6, useGrouping:false});
+                                    paragraph.innerHTML = item.emotion + " : " + item.value.toLocaleString('en-US', {
+                                        maximumFractionDigits: 6,
+                                        useGrouping: false
+                                    });
                                     container.appendChild(paragraph);
 
                                     chartData.datasets
